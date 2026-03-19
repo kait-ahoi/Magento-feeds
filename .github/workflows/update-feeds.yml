@@ -47,8 +47,8 @@ jobs:
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
           curl -s https://rclone.org/install.sh | sudo bash
-          echo "Token starts with: ${GDRIVE_TOKEN:0:15}"
-          REMOTE=":drive,scope=drive,token=$GDRIVE_TOKEN,root_folder_id=$GDRIVE_FOLDER_ID:"
-          rclone copy Products_shell_ee.xml "$REMOTE"
-          rclone copy Products_shell_lv.xml "$REMOTE"
-          rclone copy Products_shell_lt.xml "$REMOTE"
+          mkdir -p ~/.config/rclone
+          printf '%s\n' '[gdrive]' 'type = drive' 'scope = drive' "token = $GDRIVE_TOKEN" "root_folder_id = $GDRIVE_FOLDER_ID" > ~/.config/rclone/rclone.conf
+          rclone copy Products_shell_ee.xml gdrive:
+          rclone copy Products_shell_lv.xml gdrive:
+          rclone copy Products_shell_lt.xml gdrive:
