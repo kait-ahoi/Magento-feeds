@@ -43,12 +43,12 @@ jobs:
       #   4. Gem'i Knowledge → Google Drive → vali see kaust
       - name: Upload to Google Drive
         env:
-          RCLONE_CONFIG_GDRIVE_TYPE: drive
-          RCLONE_CONFIG_GDRIVE_SCOPE: drive
-          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
-          RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
           curl -s https://rclone.org/install.sh | sudo bash
-          rclone copy Products_shell_ee.xml gdrive:
-          rclone copy Products_shell_lv.xml gdrive:
-          rclone copy Products_shell_lt.xml gdrive:
+          echo "Token starts with: ${GDRIVE_TOKEN:0:15}"
+          REMOTE=":drive,scope=drive,token=$GDRIVE_TOKEN,root_folder_id=$GDRIVE_FOLDER_ID:"
+          rclone copy Products_shell_ee.xml "$REMOTE"
+          rclone copy Products_shell_lv.xml "$REMOTE"
+          rclone copy Products_shell_lt.xml "$REMOTE"
