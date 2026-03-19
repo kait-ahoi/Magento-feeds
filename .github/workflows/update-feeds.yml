@@ -50,7 +50,7 @@ jobs:
           echo "$GDRIVE_SA_KEY" > /tmp/sa_key.json
           mkdir -p ~/.config/rclone
           printf "[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/sa_key.json\nroot_folder_id = %s\n" "$GDRIVE_FOLDER_ID" > ~/.config/rclone/rclone.conf
-          rclone copy Products_shell_ee.xml gdrive:
-          rclone copy Products_shell_lv.xml gdrive:
-          rclone copy Products_shell_lt.xml gdrive:
+          rclone copy Products_shell_ee.xml gdrive: --verbose
+          rclone copy Products_shell_lv.xml gdrive: --verbose
+          rclone copy Products_shell_lt.xml gdrive: --verbose
           rm /tmp/sa_key.json
