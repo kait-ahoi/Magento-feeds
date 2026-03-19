@@ -30,3 +30,27 @@ jobs:
             git commit -m "chore: uuenda tooteandmeid $(date -u '+%Y-%m-%d %H:%M UTC')"
             git push
           fi
+
+      # Eeldused (Google Drive sünkroonimine Gem'i jaoks):
+      #   1. Loo Google Cloud projektis Service Account
+      #      → APIs & Services → Enable "Google Drive API"
+      #      → IAM → Service Accounts → Create → JSON võti alla laadida
+      #   2. Lisa JSON sisu GitHub Secrets'i:
+      #      → Repo Settings → Secrets → New secret → GDRIVE_SA_KEY (kogu JSON sisu)
+      #   3. Loo Google Drive'is kaust, jaga seda Service Account e-mailiga (Editor õigus)
+      #      → Kopi kausta ID URL-ist: drive.google.com/drive/folders/<FOLDER_ID>
+      #      → Lisa GitHub Secrets'i: GDRIVE_FOLDER_ID
+      #   4. Gem'i Knowledge → Google Drive → vali see kaust
+      - name: Upload to Google Drive
+        env:
+          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          curl -s https://rclone.org/install.sh | sudo bash
+          echo "$GDRIVE_SA_KEY" > /tmp/sa_key.json
+          mkdir -p ~/.config/rclone
+          printf "[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/sa_key.json\nroot_folder_id = %s\n" "$GDRIVE_FOLDER_ID" > ~/.config/rclone/rclone.conf
+          rclone copy Products_shell_ee.xml gdrive:
+          rclone copy Products_shell_lv.xml gdrive:
+          rclone copy Products_shell_lt.xml gdrive:
+          rm /tmp/sa_key.json
