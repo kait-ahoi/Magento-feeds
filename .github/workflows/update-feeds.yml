@@ -48,13 +48,13 @@ jobs:
         run: |
           curl -s https://rclone.org/install.sh | sudo bash
           mkdir -p ~/.config/rclone
-          cat > ~/.config/rclone/rclone.conf << EOF
-          [gdrive]
-          type = drive
-          scope = drive
-          token = ${GDRIVE_TOKEN}
-          root_folder_id = ${GDRIVE_FOLDER_ID}
-          EOF
+          {
+            echo '[gdrive]'
+            echo 'type = drive'
+            echo 'scope = drive'
+            echo "token = $GDRIVE_TOKEN"
+            echo "root_folder_id = $GDRIVE_FOLDER_ID"
+          } > ~/.config/rclone/rclone.conf
           rclone copy Products_shell_ee.xml gdrive:
           rclone copy Products_shell_lv.xml gdrive:
           rclone copy Products_shell_lt.xml gdrive:
