@@ -31,12 +31,18 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 1. Võta serverist värskeim seis, et vältida "rejected" viga
+          git pull origin main --rebase
+          
           git add Products_shell_ee.xml Products_shell_lv.xml Products_shell_lt.xml
+          
           if git diff --cached --quiet; then
             echo "Muutusi pole, commit vahele jäetud."
           else
             git commit -m "chore: uuenda tooteandmeid $(date -u '+%Y-%m-%d %H:%M UTC')"
-            git push
+            # 2. Proovi uuesti üles lükata
+            git push origin main
           fi
 
       - name: Upload to Google Drive
