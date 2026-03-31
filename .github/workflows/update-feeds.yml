@@ -2,24 +2,24 @@ name: Update Product Feeds
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Iga 6 tunni tagant
-  workflow_dispatch:       # Käivita käsitsi GitHub UI-st
-
-# 1. LISA SEE BLOKK: Sunnib kasutama uut Node.js 24 versiooni ja eemaldab hoiatused
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    # Lisame Node 24 sunni otse siia tasemele
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
-    # 2. LISA SEE BLOKK: See lubab botil faili tagasi reposse kirjutada (parandab 403 vea)
     permissions:
       contents: write
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Tagab, et git saab muudatusi sünkroonida
 
       - name: Download XML feeds
         run: |
@@ -29,7 +29,7 @@ jobs:
 
       - name: Commit & push if changed
         run: |
-          git config user.name  "github-actions[bot]"
+          git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Products_shell_ee.xml Products_shell_lv.xml Products_shell_lt.xml
           if git diff --cached --quiet; then
@@ -44,10 +44,19 @@ jobs:
           GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
+          if [ -z "$GDRIVE_TOKEN" ]; then
+            echo "VIGA: GDRIVE_TOKEN puudub! Kontrolli Repo Settings -> Secrets."
+            exit 1
+          fi
           curl -s https://rclone.org/install.sh | sudo bash
           mkdir -p ~/.config/rclone
-          # Konfigureerime rclone'i ajutiselt
-          printf '[gdrive]\ntype = drive\nscope = drive\ntoken = %s\nroot_folder_id = %s\n' "$GDRIVE_TOKEN" "$GDRIVE_FOLDER_ID" > ~/.config/rclone/rclone.conf
-          rclone copy Products_shell_ee.xml gdrive:
-          rclone copy Products_shell_lv.xml gdrive:
-          rclone copy Products_shell_lt.xml gdrive:
+          # Kasutame printf ilma ülakomadeta tokeni ümber, et vältida purunemist
+          echo "[gdrive]
+          type = drive
+          scope = drive
+          token = $GDRIVE_TOKEN
+          root_folder_id = $GDRIVE_FOLDER_ID" > ~/.config/rclone/rclone.conf
+          
+          rclone copy Products_shell_ee.xml gdrive: || echo "EE faili viga"
+          rclone copy Products_shell_lv.xml gdrive: || echo "LV faili viga"
+          rclone copy Products_shell_lt.xml gdrive: || echo "LT faili viga"
