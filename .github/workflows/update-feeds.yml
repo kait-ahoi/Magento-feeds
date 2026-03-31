@@ -32,8 +32,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 1. Võta serverist värskeim seis, et vältida "rejected" viga
-          git pull origin main --rebase
+          # 1. Toome serverist värskeima seisu (sh sinu viimased .yml muudatused)
+          git fetch origin main
+          git reset --soft origin/main
           
           git add Products_shell_ee.xml Products_shell_lv.xml Products_shell_lt.xml
           
@@ -41,7 +42,9 @@ jobs:
             echo "Muutusi pole, commit vahele jäetud."
           else
             git commit -m "chore: uuenda tooteandmeid $(date -u '+%Y-%m-%d %H:%M UTC')"
-            # 2. Proovi uuesti üles lükata
+            
+            # 2. Üritame pushida. Kui keegi tegi vahepeal muudatuse, proovime uuesti.
+            git pull --rebase origin main
             git push origin main
           fi
 
