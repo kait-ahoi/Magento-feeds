@@ -2,12 +2,20 @@ name: Update Product Feeds
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # iga 6 tunni tagant: 00:00, 06:00, 12:00, 18:00 UTC
-  workflow_dispatch:          # käivita ka käsitsi GitHub UI-st
+    - cron: '0 */6 * * *'  # Iga 6 tunni tagant
+  workflow_dispatch:       # Käivita käsitsi GitHub UI-st
+
+# 1. LISA SEE BLOKK: Sunnib kasutama uut Node.js 24 versiooni ja eemaldab hoiatused
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    
+    # 2. LISA SEE BLOKK: See lubab botil faili tagasi reposse kirjutada (parandab 403 vea)
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repo
@@ -31,16 +39,6 @@ jobs:
             git push
           fi
 
-      # Eeldused (Google Drive sünkroonimine Gem'i jaoks):
-      #   1. Loo Google Cloud projektis Service Account
-      #      → APIs & Services → Enable "Google Drive API"
-      #      → IAM → Service Accounts → Create → JSON võti alla laadida
-      #   2. Lisa JSON sisu GitHub Secrets'i:
-      #      → Repo Settings → Secrets → New secret → GDRIVE_SA_KEY (kogu JSON sisu)
-      #   3. Loo Google Drive'is kaust, jaga seda Service Account e-mailiga (Editor õigus)
-      #      → Kopi kausta ID URL-ist: drive.google.com/drive/folders/<FOLDER_ID>
-      #      → Lisa GitHub Secrets'i: GDRIVE_FOLDER_ID
-      #   4. Gem'i Knowledge → Google Drive → vali see kaust
       - name: Upload to Google Drive
         env:
           GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
@@ -48,7 +46,8 @@ jobs:
         run: |
           curl -s https://rclone.org/install.sh | sudo bash
           mkdir -p ~/.config/rclone
-          printf '%s\n' '[gdrive]' 'type = drive' 'scope = drive' "token = $GDRIVE_TOKEN" "root_folder_id = $GDRIVE_FOLDER_ID" > ~/.config/rclone/rclone.conf
+          # Konfigureerime rclone'i ajutiselt
+          printf '[gdrive]\ntype = drive\nscope = drive\ntoken = %s\nroot_folder_id = %s\n' "$GDRIVE_TOKEN" "$GDRIVE_FOLDER_ID" > ~/.config/rclone/rclone.conf
           rclone copy Products_shell_ee.xml gdrive:
           rclone copy Products_shell_lv.xml gdrive:
           rclone copy Products_shell_lt.xml gdrive:
